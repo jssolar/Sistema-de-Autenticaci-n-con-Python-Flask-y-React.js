@@ -1,54 +1,133 @@
 const getState = ({ getStore, getActions, setStore }) => {
-	return {
-		store: {
-			message: null,
-			demo: [
-				{
-					title: "FIRST",
-					background: "white",
-					initial: "white"
-				},
-				{
-					title: "SECOND",
-					background: "white",
-					initial: "white"
-				}
-			]
-		},
-		actions: {
-			// Use getActions to call a function within a fuction
-			exampleFunction: () => {
-				getActions().changeColor(0, "green");
-			},
+  return {
+    store: {
+      url: "http://127.0.0.1:3001",
 
-			getMessage: async () => {
-				try{
-					// fetching data from the backend
-					const resp = await fetch(process.env.BACKEND_URL + "/api/hello")
-					const data = await resp.json()
-					setStore({ message: data.message })
-					// don't forget to return something, that is how the async resolves
-					return data;
-				}catch(error){
-					console.log("Error loading message from backend", error)
-				}
-			},
-			changeColor: (index, color) => {
-				//get the store
-				const store = getStore();
+      //-----< creacion/registro  usuario >----->
+      users: [],
+      newUser: {
+        email: "",
+        password: "",
+        rep_password: "",
+      },
+      user: "",
 
-				//we have to loop the entire demo array to look for the respective index
-				//and change its color
-				const demo = store.demo.map((elm, i) => {
-					if (i === index) elm.background = color;
-					return elm;
-				});
+      isAuthenticated: false,
+      //-----< login >---------->
+      // email: "",
+      // password: "",
+      currentUser: null,
+    },
+    actions: {
+      //--------------------------------------------------------------------------------------------------------------------->
+      //-----< código jsolar >------------------------------------------------>
 
-				//reset the global store
-				setStore({ demo: demo });
-			}
-		}
-	};
+      //---------< funcion para  registro  de usuario >----------------->
+
+      handleChangeRegister: (e) => {
+        const { newUser } = getStore();
+        e.preventDefault();
+        newUser[e.target.name] = e.target.value;
+        setStore({ newUser });
+        console.log("newUser:", getStore().newUser);
+      },
+
+      submitRegister: (e, navigate) => {
+        //********************************************************************* */
+        e.preventDefault();
+        if (getStore().newUser.password === getStore().newUser.rep_password) {
+          getActions().saveUser(navigate);
+        } else {
+          alert("las contraseñas no coinciden");
+        }
+      },
+
+      saveUser: async (navigate) => {
+        try {
+          const { url, newUser } = getStore();
+          const response = await fetch(`${url}/api/register`, {
+            method: "POST",
+            body: JSON.stringify(newUser),
+            headers: { "Content-Type": "application/json" },
+          });
+          if (response.ok) {
+            alert("Registro exitoso!!");
+            const data = await response.json();
+            console.log("data", data);
+            navigate("/login");
+          } else {
+            throw Error("Error al registrar");
+          }
+        } catch (error) {
+          console.error(error);
+        }
+      },
+      //----------< Login usuario >---------------------------------------------->
+
+      //---- funcion para  login  de usuario------------------------------------------->
+      handleSubmitLogin: async (e, navigate) => {
+        e.preventDefault();
+        try {
+          const { url, email, password, currentUser } = getStore();
+          let info = { email, password, currentUser };
+          const response = await fetch(`${url}/api/login`, {
+            method: "POST",
+            body: JSON.stringify(info),
+            headers: {
+              "Content-Type": "application/json",
+            },
+          });
+          console.log(response);
+          const data = await response.json();
+          console.log(data);
+
+          if (data.access_token) {
+            setStore({ currentUser: data });
+            sessionStorage.setItem("currentUser", JSON.stringify(data));
+            navigate("/profile");
+          } else {
+            setStore({
+              alert: {
+                text: "Usuario no registrado",
+                show: true,
+                textbtn: "Registrarme",
+              },
+            });
+            console.error(
+              "Usuario No registrado / Correo o Contraseña incorrectas"
+            );
+          }
+        } catch (error) {
+          console.log(error);
+          console.log("hay un error en el login");
+        }
+      },
+
+      handleChangeLogin: (e) => {
+        setStore({
+          [e.target.name]: e.target.value,
+        });
+      },
+
+      // VERIFICA QUE EXISTA EL USUARIO
+      checkUser: () => {
+        if (sessionStorage.getItem("currentUser")) {
+          setStore({
+            currentUser: JSON.parse(sessionStorage.getItem("currentUser")),
+          });
+        }
+      },
+
+      logout: () => {
+        if (sessionStorage.getItem("currentUser")) {
+          setStore({
+            currentUser: null,
+          });
+          sessionStorage.removeItem("currentUser");
+        }
+      },
+    },
+  };
 };
 
 export default getState;
