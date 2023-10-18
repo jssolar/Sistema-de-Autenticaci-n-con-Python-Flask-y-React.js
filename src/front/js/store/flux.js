@@ -14,8 +14,8 @@ const getState = ({ getStore, getActions, setStore }) => {
 
       isAuthenticated: false,
       //-----< login >---------->
-      // email: "",
-      // password: "",
+      email: "",
+      password: "",
       currentUser: null,
     },
     actions: {
@@ -131,3 +131,8 @@ const getState = ({ getStore, getActions, setStore }) => {
 };
 
 export default getState;
+/* 
+token juan@gmail.com
+eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJmcmVzaCI6Z…yMjV9.F1mDH2sGOPe2yZSGNwyHXmXVdTJBM5RaPdRTVZHr9DY
+
+*/
