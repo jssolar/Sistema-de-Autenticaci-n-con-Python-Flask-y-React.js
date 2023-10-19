@@ -12,11 +12,12 @@ from api.utils import generate_sitemap, APIException
 api = Blueprint('api', __name__)
 
 
-@api.route('/hello', methods=['POST', 'GET'])
-def handle_hello():
+@api.route('/hello', methods=[ 'GET'])
+@jwt_required()
+def get_hello():
 
     response_body = {
-        "message": "Hello! I'm a message that came from the backend, check the network tab on the google inspector and you will see the GET request"
+        "message": "Hola desde EL BACK!!!!"
     }
 
     return jsonify(response_body), 200
@@ -40,10 +41,6 @@ def user_register():
     
     if not password:
         return jsonify({"error": "password is requare"}), 422
-    
-
-        
-
 
     #-----< creacion de usuario ------------------------------------------->
     
@@ -97,24 +94,7 @@ def login():
     # print(access_token)
 
 
-# @api.route("/logout", methods=["GET"])
-# @jwt_required
-# def logout():
-#     jti = get_raw_jwt()['jti']   # JWT ID
-#     blacklist.add(jti)          # mark token as revoked
-#     return {"result":"Token has been logged out"}, 200
 
-    
-
-    data = {
-        "success": "inicio de sesion exitoso",
-        "access_token": access_token,
-        "type": "Bearer",
-        "user": user.serialize()
-    }
-
-
-    return jsonify({"data":data}), 200
 
 
 # generando ruta privada
@@ -126,3 +106,15 @@ def private():
     id = get_jwt_identity()
     user = User.query.get(id)
     return jsonify({"message": "ruta  privada", "user": user.email}), 200
+
+
+@api.route("/protected", methods=["GET"])
+@jwt_required()
+def protected():
+    # Access the identity of the current user with get_jwt_identity
+    current_user = get_jwt_identity()
+    return jsonify(logged_in_as=current_user), 200
+
+
+
+# ---< Authorization: Bearer <access_token>  >---

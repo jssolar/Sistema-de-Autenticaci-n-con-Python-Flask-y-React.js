@@ -1,9 +1,14 @@
+doby {
+  height: 100%;
+}
+
 .container-register {
   width: auto;
   display: flex;
   /* border: 0.1rem solid grey; */
   justify-content: center;
   align-items: center;
+  height: 100vh;
 }
 
 .formulario {

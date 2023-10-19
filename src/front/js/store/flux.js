@@ -12,15 +12,24 @@ const getState = ({ getStore, getActions, setStore }) => {
       },
       user: "",
 
-      isAuthenticated: false,
+      //-----< mensage desde el back >-------------->
+      message: null,
+
       //-----< login >---------->
       email: "",
       password: "",
-      currentUser: null,
+      token: null,
     },
     actions: {
-      //--------------------------------------------------------------------------------------------------------------------->
       //-----< código jsolar >------------------------------------------------>
+      //-----< mantenser sesión >----------------------------------------------->
+      keepingSession: () => {
+        const token = sessionStorage.getItem("token");
+        console.log("application loaded");
+        if (token && token != "" && token != undefined) {
+          setStore({ token: token });
+        }
+      },
 
       //---------< funcion para  registro  de usuario >----------------->
 
@@ -62,14 +71,16 @@ const getState = ({ getStore, getActions, setStore }) => {
           console.error(error);
         }
       },
+
       //----------< Login usuario >---------------------------------------------->
 
       //---- funcion para  login  de usuario------------------------------------------->
       handleSubmitLogin: async (e, navigate) => {
         e.preventDefault();
+
         try {
-          const { url, email, password, currentUser } = getStore();
-          let info = { email, password, currentUser };
+          const { url, email, password, token } = getStore();
+          let info = { email, password, token };
           const response = await fetch(`${url}/api/login`, {
             method: "POST",
             body: JSON.stringify(info),
@@ -82,9 +93,9 @@ const getState = ({ getStore, getActions, setStore }) => {
           console.log(data);
 
           if (data.access_token) {
-            setStore({ currentUser: data });
-            sessionStorage.setItem("currentUser", JSON.stringify(data));
-            navigate("/profile");
+            setStore({ token: data });
+            sessionStorage.setItem("token", JSON.stringify(data));
+            navigate("/private");
           } else {
             setStore({
               alert: {
@@ -93,9 +104,7 @@ const getState = ({ getStore, getActions, setStore }) => {
                 textbtn: "Registrarme",
               },
             });
-            console.error(
-              "Usuario No registrado / Correo o Contraseña incorrectas"
-            );
+            console.error("Correo o Contraseña incorrectas");
           }
         } catch (error) {
           console.log(error);
@@ -109,21 +118,42 @@ const getState = ({ getStore, getActions, setStore }) => {
         });
       },
 
-      // VERIFICA QUE EXISTA EL USUARIO
+      // VERIFICA QUE EXISTA EL TOKEN
       checkUser: () => {
-        if (sessionStorage.getItem("currentUser")) {
+        if (sessionStorage.getItem("token")) {
           setStore({
-            currentUser: JSON.parse(sessionStorage.getItem("currentUser")),
+            token: JSON.parse(sessionStorage.getItem("token")),
           });
         }
       },
-
+      //-----< cerrar sesion >---------------------------------->
       logout: () => {
-        if (sessionStorage.getItem("currentUser")) {
+        if (sessionStorage.getItem("token")) {
+          console.log("login out");
           setStore({
-            currentUser: null,
+            token: null,
           });
-          sessionStorage.removeItem("currentUser");
+          sessionStorage.removeItem("token");
+        }
+      },
+
+      getMessage: async () => {
+        try {
+          const store = getStore();
+          const options = {
+            headers: {
+              Authorization: "Bearer " + store.token,
+              "Content-Type": "application/json",
+            },
+          };
+          // fetching data from the backend
+          const resp = await fetch("http://127.0.0.1:3001/api/hello", options);
+          const data = await resp.json();
+          setStore({ message: data.message });
+          // don't forget to return something, that is how the async resolves
+          return data.message;
+        } catch (error) {
+          console.log("Error loading message from backend", error);
         }
       },
     },
@@ -131,8 +161,3 @@ const getState = ({ getStore, getActions, setStore }) => {
 };
 
 export default getState;
-/* 
-token juan@gmail.com
-eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJmcmVzaCI6Z…yMjV9.F1mDH2sGOPe2yZSGNwyHXmXVdTJBM5RaPdRTVZHr9DY
-
-*/

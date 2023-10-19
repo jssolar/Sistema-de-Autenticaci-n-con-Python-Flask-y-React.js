@@ -11,8 +11,6 @@ const Login = () => {
     <div className="container-register">
       <div className="d-flex ">
         <form
-          action="/home"
-          method="POST"
           className="formulario"
           onSubmit={(e) => actions.handleSubmitLogin(e, navigate)}
         >
